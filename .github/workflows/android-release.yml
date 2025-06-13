@@ -33,13 +33,13 @@ jobs:
     
     # Step 4: Decode and prepare the keystore
     # IMPORTANT: You need to configure the following secrets in your GitHub repository:
-    # - ANDROID_KEYSTORE: Base64 encoded keystore file
+    # - SIGNING_KEY : Base64 encoded keystore file
     # - KEYSTORE_PASSWORD: Password for the keystore
     # - KEY_ALIAS: Alias of the key in the keystore
     # - KEY_PASSWORD: Password for the key
     - name: Decode Keystore
       env:
-        ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+        ANDROID_KEYSTORE: ${{ secrets. SIGNING_KEY }}
       run: |
         echo "$ANDROID_KEYSTORE" | base64 --decode > ${{ github.workspace }}/keystore.jks
     
@@ -139,7 +139,7 @@ jobs:
 # Required Secrets Configuration:
 # Go to Settings > Secrets and variables > Actions in your GitHub repository and add:
 #
-# 1. ANDROID_KEYSTORE
+# 1.  SIGNING_KEY 
 #    - Generate a keystore: keytool -genkey -v -keystore release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias your-alias
 #    - Convert to base64: base64 -i release-key.jks | pbcopy (on macOS) or base64 release-key.jks | xclip (on Linux)
 #    - Paste the base64 string as the secret value
