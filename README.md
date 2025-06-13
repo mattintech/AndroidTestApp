@@ -161,10 +161,23 @@ This project uses:
 
 Use responsibly and only on test devices or when specifically needed for development/testing purposes.
 
-## License
-
-This is a test application for development purposes.
-
 ## Contributing
 
-This is a demonstration project. Feel free to fork and modify for your testing needs.
+Contributions are welcome! However, before investing significant time in a feature or change:
+
+1. **Start a discussion first**: Open an issue or start a discussion in the project's Discussions tab to propose your idea
+2. **Wait for feedback**: Get confirmation that the change aligns with the project's goals
+3. **Fork and create a branch**: Work on your changes in a dedicated branch
+4. **Submit a Pull Request**: Include a clear description of the changes and reference any related issues
+
+### Contribution Guidelines
+
+- Follow the existing code style and conventions
+- Add tests for new functionality
+- Update documentation as needed
+- Ensure all tests pass before submitting
+- Keep commits focused and atomic
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
