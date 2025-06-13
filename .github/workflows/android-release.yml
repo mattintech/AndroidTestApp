@@ -39,7 +39,7 @@ jobs:
     # - KEY_PASSWORD: Password for the key
     - name: Decode Keystore
       env:
-        ANDROID_KEYSTORE: ${{ secrets. SIGNING_KEY }}
+        ANDROID_KEYSTORE: ${{ secrets.SIGNING_KEY }}
       run: |
         echo "$ANDROID_KEYSTORE" | base64 --decode > ${{ github.workspace }}/keystore.jks
     
