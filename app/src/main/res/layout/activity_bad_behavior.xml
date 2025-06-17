@@ -155,7 +155,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚠️ IMPORTANT: Crashes/ANRs only occur when app is in foreground!\n• Keep this screen open for tests to work\n• Random mode: crashes only (no ANRs) for unattended testing\n• Random mode: interferes with ALL other tests\n• App auto-restarts after crashes\n• Random mode stops after 24 hours"
+                android:text="⚠️ IMPORTANT: Crashes/ANRs only occur when app is in foreground!\n• Keep this screen open for tests to work\n• Random mode: crashes only (no ANRs) for unattended testing\n• Random mode: interferes with ALL other tests\n• App will NOT auto-restart after crashes\n• Random mode stops when the app crashes"
                 android:textSize="12sp"
                 android:textColor="@android:color/holo_red_dark"
                 android:layout_marginTop="8dp" />
