@@ -32,34 +32,12 @@ public class BadBehaviorActivity extends AppCompatActivity {
     private boolean isRandomModeActive = false;
     private Runnable randomCrashRunnable;
     private boolean isServiceRunning = false;
+    private String currentFrequency = "";
+    private long randomModeStartTime = 0;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Set up crash handler to restart app
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread thread, Throwable throwable) {
-                // Check if we're in random mode
-                SharedPreferences prefs = getSharedPreferences("BadBehaviorPrefs", Context.MODE_PRIVATE);
-                boolean isRandomActive = prefs.getBoolean("isRandomActive", false);
-                
-                // Restart the app
-                Intent intent;
-                if (isRandomActive) {
-                    // Go directly to BadBehaviorActivity to resume random mode
-                    intent = new Intent(getApplicationContext(), BadBehaviorActivity.class);
-                    intent.putExtra("resumeRandomMode", true);
-                } else {
-                    // Normal restart to MainActivity
-                    intent = new Intent(getApplicationContext(), MainActivity.class);
-                }
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                android.os.Process.killProcess(android.os.Process.myPid());
-            }
-        });
         
         binding = ActivityBadBehaviorBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -81,8 +59,6 @@ public class BadBehaviorActivity extends AppCompatActivity {
             finish();
         });
         
-        // Check if we need to resume random mode after a crash
-        checkAndResumeRandomMode();
     }
     
     private void setupWindowInsets() {
@@ -141,6 +117,7 @@ public class BadBehaviorActivity extends AppCompatActivity {
         
         // Initially disable stop button
         binding.btnStopRandom.setEnabled(false);
+        
     }
     
     private void triggerCrash() {
@@ -298,22 +275,15 @@ public class BadBehaviorActivity extends AppCompatActivity {
                        "• STOP battery drain tests\n" +
                        "• FAIL scheduled downloads\n" +
                        "• Crash the app " + frequency.toLowerCase() + "\n\n" +
-                       "The app will auto-restart and return to this screen.\n" +
-                       "Keep the app open for continuous testing.\n" +
-                       "This mode will automatically stop after 24 hours.\n\n" +
+                       "NOTE: The app will NOT auto-restart after crashes.\n" +
+                       "Random mode will stop when the app crashes.\n\n" +
                        "Are you sure you want to start random crash mode?")
             .setPositiveButton("Start", (dialog, which) -> {
                 Log.d(TAG, "Starting random mode with frequency: " + frequency);
                 
-                // Save random mode configuration
-                SharedPreferences prefs = getSharedPreferences("BadBehaviorPrefs", Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean("isRandomActive", true);
-                editor.putString("frequency", frequency);
-                editor.putLong("startTime", System.currentTimeMillis());
-                editor.apply();
-                
                 isRandomModeActive = true;
+                currentFrequency = frequency;
+                randomModeStartTime = System.currentTimeMillis();
                 binding.btnStartRandom.setEnabled(false);
                 binding.btnStopRandom.setEnabled(true);
                 binding.btnTriggerCrash.setEnabled(false);
@@ -373,11 +343,6 @@ public class BadBehaviorActivity extends AppCompatActivity {
         isRandomModeActive = false;
         handler.removeCallbacks(randomCrashRunnable);
         
-        // Clear random mode from preferences
-        SharedPreferences prefs = getSharedPreferences("BadBehaviorPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putBoolean("isRandomActive", false);
-        editor.apply();
         
         binding.btnStartRandom.setEnabled(true);
         binding.btnStopRandom.setEnabled(false);
@@ -392,12 +357,9 @@ public class BadBehaviorActivity extends AppCompatActivity {
     }
     
     private void viewScheduledCrashes() {
-        SharedPreferences prefs = getSharedPreferences("BadBehaviorPrefs", Context.MODE_PRIVATE);
-        boolean isRandomActive = prefs.getBoolean("isRandomActive", false);
-        
-        if (isRandomActive && isRandomModeActive) {
-            String frequency = prefs.getString("frequency", "Unknown");
-            long startTime = prefs.getLong("startTime", 0);
+        if (isRandomModeActive) {
+            String frequency = currentFrequency;
+            long startTime = randomModeStartTime;
             
             StringBuilder info = new StringBuilder();
             info.append("Random Crash Mode Active\n\n");
@@ -492,49 +454,6 @@ public class BadBehaviorActivity extends AppCompatActivity {
         }
     }
     
-    private void checkAndResumeRandomMode() {
-        SharedPreferences prefs = getSharedPreferences("BadBehaviorPrefs", Context.MODE_PRIVATE);
-        boolean wasRandomActive = prefs.getBoolean("isRandomActive", false);
-        
-        if (wasRandomActive) {
-            String frequency = prefs.getString("frequency", "");
-            long startTime = prefs.getLong("startTime", 0);
-            
-            // Check if we should still be in random mode (e.g., within 24 hours)
-            long elapsedHours = (System.currentTimeMillis() - startTime) / (1000 * 60 * 60);
-            if (elapsedHours < 24 && !frequency.isEmpty()) {
-                Log.d(TAG, "Resuming random mode after restart: " + frequency);
-                
-                // Update UI to reflect active state
-                isRandomModeActive = true;
-                binding.btnStartRandom.setEnabled(false);
-                binding.btnStopRandom.setEnabled(true);
-                binding.btnTriggerCrash.setEnabled(false);
-                binding.btnTriggerAnr.setEnabled(false);
-                
-                // Set the spinner to the saved frequency
-                ArrayAdapter<String> adapter = (ArrayAdapter<String>) binding.spinnerFrequency.getAdapter();
-                int position = adapter.getPosition(frequency);
-                if (position >= 0) {
-                    binding.spinnerFrequency.setSelection(position);
-                }
-                
-                // Resume scheduling with a shorter initial delay after crash
-                long delayMillis = Math.min(10000, getDelayMillis(frequency)); // 10 seconds or normal delay, whichever is shorter
-                scheduleRandomBehavior(delayMillis);
-                
-                // Show notification again
-                showRandomModeNotification(frequency);
-                
-                Toast.makeText(this, "Random mode resumed", Toast.LENGTH_SHORT).show();
-            } else {
-                // Clear stale random mode
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putBoolean("isRandomActive", false);
-                editor.apply();
-            }
-        }
-    }
     
     // Inner class for slow service
     public static class SlowService extends android.app.Service {
